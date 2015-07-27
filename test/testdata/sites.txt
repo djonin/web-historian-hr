@@ -1,2 +1,1 @@
-example1.com
-example2.com
+{"url":"www.example.com"}
