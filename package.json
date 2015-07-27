@@ -14,7 +14,7 @@
     "underscore": "^1.6.0"
   },
   "scripts": {
-    "test": "mocha test",
+    "test": "mocha --bail test",
     "start": "node ./web/basic-server.js"
   }
 }
