@@ -50,12 +50,14 @@ exports.handleRequest = function(req, res) {
 
       req.on('end', function() {
         var parsed = body.replace('url=', '');
+        console.log(parsed);
         if (parsed) {
+        	console.log(parsed);
           fs.appendFile(archive.paths.list,
             parsed,
             function() {
               res.writeHead(302);
-              res.end();
+              res.end('done');
             });
         } else {
           res.writeHead(400);

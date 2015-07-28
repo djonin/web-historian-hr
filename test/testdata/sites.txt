@@ -1,1 +1,1 @@
-{"url":"www.example.com"}
+{"http://www.google.com":"http://www.google.com","http://www.gmail.com":"http://www.gmail.com"}

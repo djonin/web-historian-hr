@@ -34,8 +34,9 @@ exports.initialize = function(pathsObj) {
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(callback) {
-  fs.readFile(exports.paths.list, function(err, res) {
+  fs.readFile(exports.paths.list, 'utf8', function(err, res) {
     console.error(err);
+    console.log(JSON.parse(res));
     callback(JSON.parse(res));
   });
 };
@@ -80,9 +81,11 @@ exports.downloadUrls = function(urls, callback) {
           response.on('end', function() {
             var writePath =
               path.join(exports.paths.archivedSites, item);
-
-            fs.writeFile(writePath, body, function() {
-              callback(item);
+              console.log(writePath);
+            fs.appendFile(writePath, body, function() {
+            	if(callback) {
+              	callback(item);
+            	}
             });
           });
         })

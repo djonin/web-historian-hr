@@ -5,6 +5,7 @@ var archive = require('../helpers/archive-helpers');
 var path = require('path');
 var supertest = require('supertest');
 var _ = require('underscore');
+var rimraf = require('rimraf');
 
 archive.initialize({
   list: path.join(__dirname, '/testdata/sites.txt')
@@ -31,7 +32,6 @@ describe('server', function() {
             fixtureName;
 
           // Create or clear the file.
-          console.log(fixturePath);
           var fd = fs.openSync(fixturePath, 'w');
           fs.writeSync(fd, 'google');
           fs.closeSync(fd);
@@ -56,21 +56,19 @@ describe('server', function() {
     describe('POST', function() {
       it('should append submitted sites to "sites.txt"', function(
         done) {
-        var url = 'www.example.com';
+        var url = 'http://www.google.com';
 
         // Reset the test file and process request
         fs.closeSync(fs.openSync(archive.paths.list, 'w'));
 
         request
           .post('/')
-          .send({
-            url: url
-          })
+          .send('url='+url)
           .expect(302, function(err) {
             if (!err) {
               var fileContents = fs.readFileSync(archive.paths
                 .list, 'utf8');
-              expect(fileContents).to.equal(url + '\n');
+              expect(fileContents).to.equal('http://www.google.com');
             }
 
             done(err);
@@ -83,17 +81,13 @@ describe('server', function() {
 describe('archive helpers', function() {
   describe('#readListOfUrls', function() {
     it('should read urls from sites.txt', function(done) {
-      var urlArray = ['example1.com', 'example2.com'];
-
-      _.each(urlArray, function(url) {
-        archive.addUrlToList(url, function() {
-
-        });
+      var urlCollection = {'http://www.google.com': 'http://www.google.com', 'http://www.gmail.com':'http://www.gmail.com'};
+      _.each(urlCollection,function(item) {
+        archive.addUrlToList(item);
       });
-      fs.writeFileSync(archive.paths.list, urlArray.join('\n'));
 
       archive.readListOfUrls(function(urls) {
-        expect(urls).to.deep.equal(urlArray);
+        expect(urls).to.deep.equal(urlCollection);
         done();
       });
     });
@@ -101,26 +95,24 @@ describe('archive helpers', function() {
 
   describe('#isUrlInList', function() {
     it('should check if a url is in the list', function(done) {
-      var urlArray = ['example1.com', 'example2.com'];
+      var urlCollection = {'http://www.google.com': 'http://www.google.com', 'http://www.gmail.com':'http://www.gmail.com'};
       var counter = 0;
       var total = 2;
 
-      _.each(urlArray, function(url) {
+      _.each(urlCollection, function(url) {
         archive.addUrlToList(url, function() {
 
-          archive.isUrlInList('example1.com', function(is) {
-            expect(is);
-            if (++counter === total) {
-              done();
-            }
-          });
+          var is = archive.isUrlInList(url);
+          expect(is);
+          if (++counter === total) {
+            done();
+          }
 
-          archive.isUrlInList('gibberish', function(is) {
-            expect(!is);
-            if (++counter === total) {
-              done();
-            }
-          });
+          is = archive.isUrlInList('gibberish');
+          expect(!is);
+          if (++counter === total) {
+            done();
+          }
 
         });
       });
@@ -131,46 +123,42 @@ describe('archive helpers', function() {
 
   describe('#addUrlToList', function() {
     it('should add a url to the list', function(done) {
-      var urlArray = ['example1.com', 'example2.com\n'];
-      fs.writeFileSync(archive.paths.list, urlArray.join('\n'));
-
-      archive.addUrlToList('someurl.com', function() {
-        archive.isUrlInList('someurl.com', function(is) {
-          expect(is);
-          done();
-        });
+      archive.addUrlToList('http://www.google.com', function() {
+        is = archive.isUrlInList('http://www.google.com');
+        expect(is);
+        done();
       });
     });
   });
 
   describe('#isUrlArchived', function() {
     it('should check if a url is archived', function(done) {
-      fs.writeFileSync(archive.paths.archivedSites +
-        '/www.example.com', 'blah blah');
-
       var counter = 0;
       var total = 2;
-
-      archive.isUrlArchived('www.example.com', function(exists) {
-        expect(exists);
-        if (++counter == total) {
-          done()
-        }
-      });
-
-      archive.isUrlArchived('www.notarchived.com', function(exists) {
-        expect(!exists);
-        if (++counter == total) {
-          done()
-        }
+      
+      archive.addUrlToList('http://www.google.com', function() {
+        archive.downloadUrls(undefined, function() {
+          archive.isUrlArchived('http://www.google.com', function(exists) {
+            expect(exists);
+            if (++counter == total) {
+              done()
+            }
+          });
+          archive.isUrlArchived('www.notarchived.com', function(exists) {
+            expect(!exists);
+            if (++counter == total) {
+              done()
+            }
+          });
+        });
       });
     });
   });
 
   describe('#downloadUrls', function() {
     it('should download all pending urls in the list', function(done) {
-      var urlArray = ['www.example.com', 'www.google.com'];
-      archive.downloadUrls(urlArray);
+      var urlArray = ['http://www.reddit.com', 'http://www.remote-bookstrap.com'];
+      archive.downloadUrls(urlArray, function() { console.log('asdas');});
 
       // Ugly hack to wait for all downloads to finish.
       setTimeout(function() {
