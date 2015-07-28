@@ -13,7 +13,14 @@ archive.initialize({
 
 var request = supertest.agent(server);
 
+
+
 describe('server', function() {
+
+  beforeEach(function(done) {
+    rimraf(archive.paths.archivedSites+'/*', done);
+  });
+
   describe('GET /', function() {
     it('should return the content of index.html', function(done) {
       // just assume that if it contains an <input> tag its index.html
@@ -27,7 +34,7 @@ describe('server', function() {
     describe('GET', function() {
       it('should return the content of a website from the archive',
         function(done) {
-          var fixtureName = 'www.google.com';
+          var fixtureName = 'wwwgooglecom';
           var fixturePath = archive.paths.archivedSites + '/' +
             fixtureName;
 
@@ -79,6 +86,9 @@ describe('server', function() {
 });
 
 describe('archive helpers', function() {
+  beforeEach(function(done) {
+    rimraf(archive.paths.archivedSites+'/*', done);
+  });
   describe('#readListOfUrls', function() {
     it('should read urls from sites.txt', function(done) {
       var urlCollection = {'http://www.google.com': 'http://www.google.com', 'http://www.gmail.com':'http://www.gmail.com'};
@@ -157,15 +167,16 @@ describe('archive helpers', function() {
 
   describe('#downloadUrls', function() {
     it('should download all pending urls in the list', function(done) {
-      var urlArray = ['http://www.reddit.com', 'http://www.remote-bookstrap.com'];
-      archive.downloadUrls(urlArray, function() { console.log('asdas');});
-
-      // Ugly hack to wait for all downloads to finish.
-      setTimeout(function() {
-        expect(fs.readdirSync(archive.paths.archivedSites)).to.deep
-          .equal(urlArray);
-        done();
-      }, 25);
+      var urlArray = ['http://www.reddit.com', 'http://www.wikipedia.com'];
+      var nameArray = _.map(urlArray, function(item) { return item.replace(/\W/g, '');});
+      var counter = 0;
+      var total = 2;
+      archive.downloadUrls(urlArray, function() {
+        if(++counter == total) {
+          expect(fs.readdirSync(archive.paths.archivedSites)).to.deep.equal(nameArray);
+          done();
+        }
+      });
     });
   });
 });

@@ -70,18 +70,17 @@ exports.downloadUrls = function(urls, callback) {
         return;
       }
 
-      request
-        .get(item)
+      request(item)
         .on('response', function(response) {
           var body = '';
           response.on('data', function(data) {
             body += data;
           });
+      	console.log(body);
 
           response.on('end', function() {
             var writePath =
-              path.join(exports.paths.archivedSites, item);
-              console.log(writePath);
+              path.join(exports.paths.archivedSites, item.replace(/\W/g, ''));
             fs.appendFile(writePath, body, function() {
             	if(callback) {
               	callback(item);

@@ -26,7 +26,7 @@ exports.handleRequest = function(req, res) {
         res.end(data);
       });
     } else {
-      var siteFile = path.join(archive.paths.archivedSites, req.url);
+      var siteFile = path.join(archive.paths.archivedSites, req.url.replace(/\W/g, ''));
 
       fs.readFile(siteFile, function(err, data) {
         if (err) {
