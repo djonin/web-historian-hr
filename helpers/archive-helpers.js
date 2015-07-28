@@ -18,31 +18,44 @@ exports.paths = {
 };
 
 // Used for stubbing paths for tests, do not modify
-exports.initialize = function(pathsObj){
+exports.initialize = function(pathsObj) {
   _.each(pathsObj, function(path, type) {
     exports.paths[type] = path;
+  });
+
+  exports.readListOfUrls(function(res) {
+    list = res;
   });
 };
 
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function(callback){
-  fs.readFile(exports.paths.list, function(err, list) {
+exports.readListOfUrls = function(callback) {
+  fs.readFile(exports.paths.list, function(err, res) {
     console.error(err);
-    callback(JSON.parse(list));
+    callback(JSON.parse(res));
   });
 };
 
-exports.isUrlInList = function(){
-  
+exports.isUrlInList = function(url) {
+  return list.hasOwnProperty(url);
 };
 
-exports.addUrlToList = function(){
+exports.addUrlToList = function(url, callback) {
+  list[url] = url;
+  var text = JSON.stringify(list);
+  fs.writeFile(exports.paths.list, text, callback);
 };
 
-exports.isUrlArchived = function(){
+exports.isUrlArchived = function(url, callback) {
+  if (!exports.isUrlInList(url)) {
+    return callback(false);
+  }
+
+  fs.exists(path.join(exports.paths.archivedSites, url), function(exists) {
+    callback(exists);
+  });
 };
 
-exports.downloadUrls = function(){
-};
+exports.downloadUrls = function() {};
